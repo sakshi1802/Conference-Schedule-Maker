@@ -1,6 +1,5 @@
 # Conference-Student-Attendance-Analysis
 
-
 This project automates the process of cleaning and organizing research conference schedules from Excel files.  
 It provides a **Streamlit** interface for users to upload Excel files, define sessions, and download a processed file.
 
