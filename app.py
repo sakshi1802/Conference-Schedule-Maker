@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import io
+import numpy as np
 
 # Web App Title
-st.title("Excel Data Cleaner & Session Assigner")
-st.write("Upload an Excel file, specify session details, and get a cleaned, session-assigned file!")
+st.title("Oral Presentation Scheduler with Multiple Sections")
 
 # Upload Excel File
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
@@ -14,91 +13,115 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     # Define required columns
-    required_columns = ['Major', 'Presenters', 'Faculty Mentor', 'Title']
+    required_columns = ['Theme', 'Title', 'Presenter(s)', 'Faculty Mentor']
     missing_cols = [col for col in required_columns if col not in df.columns]
 
     if missing_cols:
         st.error(f"Missing columns in uploaded file: {missing_cols}")
     else:
-        # Select session type
-        session_type = st.radio("Select Session Type:", ["Oral Session", "Poster Session"])
+        # Ask user for session details
+        slot_duration = st.number_input("Duration per presentation (minutes):", 
+                                      min_value=5, max_value=60, value=15)
+        max_presentations = st.number_input("Max presentations per session:", 
+                                          min_value=3, max_value=10, value=5)
+        
+        # Ask for number of sections
+        num_sections = st.number_input("Number of sections:", min_value=1, max_value=3, value=2)
+        
+        # Collect section time ranges
+        sections = []
+        for i in range(num_sections):
+            st.subheader(f"Section {i+1} Time Range")
+            col1, col2 = st.columns(2)
+            with col1:
+                start = st.time_input(f"Start time:", key=f"start_{i}",
+                                    value=datetime.strptime("2:45 PM", "%I:%M %p").time() if i == 0 else 
+                                    datetime.strptime("4:30 PM", "%I:%M %p").time())
+            with col2:
+                end = st.time_input(f"End time:", key=f"end_{i}",
+                                  value=datetime.strptime("2:00 AM", "%I:%M %p").time() if i == 0 else 
+                                  datetime.strptime("6:00 PM", "%I:%M %p").time())
+            
+            sections.append({
+                'name': f"Section {i+1}",
+                'start': start,
+                'end': end,
+                'start_dt': datetime.combine(datetime.today(), start),
+                'end_dt': datetime.combine(
+                    datetime.today() + timedelta(days=1) if end < start else datetime.today(), 
+                    end
+                )
+            })
 
-        if session_type == "Oral Session":
-            # Inputs for Oral Session
-            start_time = st.time_input("Enter start time for first presentation:", value=datetime.strptime("09:00 AM", "%I:%M %p").time())
-            presentations_per_session = st.number_input("Presentations per session:", min_value=1, max_value=20, value=5)
-            time_gap = st.number_input("Time gap between presentations (minutes):", min_value=5, max_value=60, value=15)
-
-            if st.button("Generate Oral Sessions"):
-                # Convert start time to datetime
-                current_time = datetime.combine(datetime.today(), start_time)
-                session_number = 1
-                df['Session'] = None
-                df['Time Assigned'] = None
-
-                # Assign sessions and times
-                for index, row in df.iterrows():
-                    if index % presentations_per_session == 0 and index != 0:
-                        session_number += 1  # Move to next session
-
-                    df.at[index, 'Session'] = session_number
-                    df.at[index, 'Time Assigned'] = current_time.strftime("%I:%M %p")
-
-                    # Increment time for next presentation
-                    current_time += timedelta(minutes=time_gap)
-
-                # Reorder columns
-                final_df = df[['Major', 'Number Assigned', 'Time Assigned', 'Session', 'Presenter Name', 'Faculty Mentor Name', 'Title']]
-
-                # Show preview
-                st.write("📊 **Preview of Cleaned CSV:**")
-                st.dataframe(final_df.head(10))  # Show first 10 rows
-
-                # Convert dataframe to CSV
-                csv = final_df.to_csv(index=False).encode('utf-8')
-
-                # Download cleaned file
-                st.download_button("⬇️ Download Cleaned CSV", csv, "cleaned_data.csv", "text/csv")
-
-        elif session_type == "Poster Session":
-            # Dynamic poster session input
-            num_sessions = st.number_input("Number of Poster Sessions:", min_value=1, value=2)
-            session_details = []
-
-            for i in range(num_sessions):
-                st.write(f"**Session {i+1} Details:**")
-                session_start = st.time_input(f"Start time for Poster Session {i+1}:", value=datetime.strptime("12:00 PM", "%I:%M %p").time())
-                poster_count = st.number_input(f"Number of posters in Session {i+1}:", min_value=1, max_value=200, value=50)
-                session_details.append((session_start, poster_count))
-
-            if st.button("Generate Poster Sessions"):
-                session_number = 1
-                df['Session'] = None
-                df['Time Assigned'] = None
-                index = 0
-
-                # Assign posters to sessions
-                for session_start, poster_count in session_details:
-                    current_time = datetime.combine(datetime.today(), session_start)
-
-                    for _ in range(poster_count):
-                        if index >= len(df):
-                            break
-                        df.at[index, 'Session'] = session_number
-                        df.at[index, 'Time Assigned'] = current_time.strftime("%I:%M %p")
-                        index += 1
-
-                    session_number += 1  # Move to next session
-
-                # Reorder columns
-                final_df = df[['Major', 'Number Assigned', 'Time Assigned', 'Session', 'Presenter Name', 'Faculty Mentor Name', 'Title']]
-
-                # Show preview
-                st.write("📊 **Preview of Cleaned CSV:**")
-                st.dataframe(final_df.head(10))  # Show first 10 rows
-
-                # Convert dataframe to CSV
-                csv = final_df.to_csv(index=False).encode('utf-8')
-
-                # Download cleaned file
-                st.download_button("⬇️ Download Cleaned CSV", csv, "cleaned_data.csv", "text/csv")
+        if st.button("Generate Schedule"):
+            # 1. Sort by theme first
+            df = df.sort_values(by="Theme")
+            
+            # 2. Split dataframe into roughly equal sections
+            total_presentations = len(df)
+            split_indices = np.linspace(0, total_presentations, num_sections+1, dtype=int)
+            section_dfs = []
+            for i in range(num_sections):
+                section_dfs.append(df.iloc[split_indices[i]:split_indices[i+1]])
+            
+            # Initialize columns
+            df['Session ID'] = None
+            df['Time Slot'] = None
+            df['Section'] = None
+            
+            # 3. Assign sessions and time slots
+            session_id = 1
+            current_time = [section['start_dt'] for section in sections]
+            section_day = [0] * num_sections  # Track days for each section
+            
+            for section_idx, section_df in enumerate(section_dfs):
+                theme_groups = section_df.groupby('Theme')
+                
+                for theme, theme_df in theme_groups:
+                    # Split theme into sessions
+                    for i in range(0, len(theme_df), max_presentations):
+                        presentation_group = theme_df.iloc[i:i+max_presentations]
+                        
+                        # Calculate required time
+                        required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
+                        section_end = datetime.combine(
+                            datetime.today() + timedelta(days=section_day[section_idx]), 
+                            sections[section_idx]['end']
+                        )
+                        
+                        # Check if we need to move to next day
+                        if required_time > section_end:
+                            section_day[section_idx] += 1
+                            current_time[section_idx] = datetime.combine(
+                                datetime.today() + timedelta(days=section_day[section_idx]),
+                                sections[section_idx]['start']
+                            )
+                            required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
+                        
+                        # Assign time slots
+                        time_cursor = current_time[section_idx]
+                        for idx in presentation_group.index:
+                            df.at[idx, 'Session ID'] = session_id
+                            df.at[idx, 'Time Slot'] = time_cursor.strftime("%I:%M %p")
+                            df.at[idx, 'Section'] = sections[section_idx]['name']
+                            time_cursor += timedelta(minutes=slot_duration)
+                        
+                        # Update time for next session in this section
+                        current_time[section_idx] = time_cursor
+                        session_id += 1
+            
+            # Prepare final output
+            final_df = df[['Section', 'Session ID', 'Time Slot', 'Theme', 'Title', 'Presenter(s)', 'Faculty Mentor']]
+            
+            # Show results
+            st.write("📊 **Schedule Preview:**")
+            st.dataframe(final_df.head(20))
+            
+            # Show summary stats
+            scheduled = final_df[final_df['Session ID'].notna()]
+            st.write(f"Total scheduled: {len(scheduled)} presentations")
+            st.write(f"Total sessions created: {session_id-1}")
+            
+            # Download
+            csv = final_df.to_csv(index=False).encode('utf-8')
+            st.download_button("⬇️ Download Schedule CSV", csv, "oral_presentation_schedule.csv", "text/csv")
