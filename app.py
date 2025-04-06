@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 # Web App Title
-st.title("Oral Presentation Scheduler with Multiple Sections")
+st.title("Conference Scheduler Maker")
 
 # Upload Excel File
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
