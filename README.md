@@ -1,5 +1,7 @@
 # Conference Schedule Maker
 
+## Deployed on Streamlit - https://conference-schedule-maker-app-git-mabxnjmbagengxvdttnhfg.streamlit.app/ 
+
 ## Overview
 The **Conference Schedule Maker** is a web application developed using Streamlit and Python to assist in generating schedules for academic conferences. The tool allows organizers to upload an Excel file containing presentation details, and based on the provided data, it automatically generates and organizes session schedules for both oral and poster presentations.
 
