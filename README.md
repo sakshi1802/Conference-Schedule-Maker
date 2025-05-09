@@ -7,9 +7,15 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
 
 ## Features
 - **Excel File Upload**: Users can upload an Excel file with columns for *Theme*, *Title*, *Presenter(s)*, and *Faculty Mentor*.
+  
 - **Session Type Selection**: Choose between *Oral Session Maker* or *Poster Session Maker*.
+  
 - **Customizable Sessions**: Define session durations, maximum presentations per session, and the number of sections (sessions) in a day.
+  
 - **Automatic Schedule Generation**: The tool sorts presentations by theme, splits them across sections, and assigns time slots based on user inputs.
+  
+- **Schedule Preview**: View a formatted preview of the generated schedule directly within the app before downloading.
+  
 - **Downloadable Schedules**: After generating the schedule, users can download it in CSV format.
 
 ## Requirements
@@ -18,9 +24,10 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
   - `streamlit`
   - `pandas`
   - `numpy`
+  - `openpyxl`
     
 ## Sample Data
-A **sample Excel file** is provided in the repository to test the app and understand the required format.  
+A **sample_file_conference_schedule_maker** is provided in the repository to test the app and understand the required format. 
 Use this file to:
 - See how the schedule maker works.
 - Ensure your input file has correctly formatted column headers.
