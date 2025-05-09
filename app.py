@@ -35,17 +35,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Web App Title
 st.markdown("<h1>Conference Schedule Maker</h1>", unsafe_allow_html=True)
 
-# Create two columns: left for instructions, right for the main app functionality
 col1, col2 = st.columns([1, 2])
 
-# Add spacing between the columns
 col1.markdown('<div class="column-spacing"></div>', unsafe_allow_html=True)
 col2.markdown('<div class="column-spacing"></div>', unsafe_allow_html=True)
 
-# Left panel (col1) for instructions
 with col1:
     st.markdown("""
     **Welcome to the Conference Schedule Maker!**  
@@ -66,7 +62,6 @@ with col1:
 
     """)
 
-# Right panel (col2) for app functionality
 with col2:
     # Upload Excel File
     uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
@@ -205,17 +200,15 @@ with col2:
                     })
 
                 if st.button("Generate Poster Schedule"):
-                    # 1. Sort by theme first
+                    
                     df = df.sort_values(by="Theme")
-                
-                    # 2. Split dataframe into roughly equal sections
+                   
                     total_presentations = len(df)
                     split_indices = np.linspace(0, total_presentations, num_sections+1, dtype=int)
                     poster_groups = []
                     for i in range(num_sections):
                         poster_groups.append(df.iloc[split_indices[i]:split_indices[i+1]])
 
-                    # Initialize columns
                     df['Session ID'] = None
                     df['Time Slot'] = None
                     df['Section'] = None
