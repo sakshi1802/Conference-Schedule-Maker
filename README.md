@@ -1,6 +1,6 @@
 # Conference Schedule Maker
 
-## Deployed on Streamlit - https://conference-schedule-maker-app-git-mabxnjmbagengxvdttnhfg.streamlit.app/ 
+### Deployed on Streamlit - https://conference-schedule-maker-app-git-mabxnjmbagengxvdttnhfg.streamlit.app/ 
 
 ## Overview
 The **Conference Schedule Maker** is a web application developed using Streamlit and Python to assist in generating schedules for academic conferences. The tool allows organizers to upload an Excel file containing presentation details, and based on the provided data, it automatically generates and organizes session schedules for both oral and poster presentations.
@@ -18,8 +18,19 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
   - `streamlit`
   - `pandas`
   - `numpy`
+    
+## Sample Data
+A **sample Excel file** is provided in the repository to test the app and understand the required format.  
+Use this file to:
+- See how the schedule maker works.
+- Ensure your input file has correctly formatted column headers.
 
-
+**Required Column Headers (case-sensitive):**
+- Theme
+- Title
+- Presenter(s)
+- Faculty Mentor
+  
 ## How to Use Locally
 1. **Clone the repository** or download the code.
 2. Install the required dependencies:
