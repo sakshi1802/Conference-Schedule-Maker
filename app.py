@@ -132,51 +132,51 @@ with col2:
                     section_day = [0] * num_sections
 
                     for section_idx, section_df in enumerate(section_dfs):
-                    # Step 1: Re-categorize themes based on presentation count threshold
-                    theme_counts = section_df['Theme'].value_counts()
-                    large_themes = theme_counts[theme_counts >= max_presentations].index.tolist()
-                    small_themes = theme_counts[theme_counts < max_presentations].index.tolist()
+                        # Step 1: Re-categorize themes based on presentation count threshold
+                        theme_counts = section_df['Theme'].value_counts()
+                        large_themes = theme_counts[theme_counts >= max_presentations].index.tolist()
+                        small_themes = theme_counts[theme_counts < max_presentations].index.tolist()
 
-                    # Separate into two dataframes
-                    large_theme_df = section_df[section_df['Theme'].isin(large_themes)].copy()
-                    small_theme_df = section_df[section_df['Theme'].isin(small_themes)].copy()
+                        # Separate into two dataframes
+                        large_theme_df = section_df[section_df['Theme'].isin(large_themes)].copy()
+                        small_theme_df = section_df[section_df['Theme'].isin(small_themes)].copy()
 
-                    # Step 2: Group large themes in chunks
-                    theme_groups = []
-                    for _, group_df in large_theme_df.groupby('Theme'):
-                        for i in range(0, len(group_df), max_presentations):
-                            theme_groups.append(group_df.iloc[i:i+max_presentations])
+                        # Step 2: Group large themes in chunks
+                        theme_groups = []
+                        for _, group_df in large_theme_df.groupby('Theme'):
+                            for i in range(0, len(group_df), max_presentations):
+                                theme_groups.append(group_df.iloc[i:i+max_presentations])
 
-                    # Step 3: Mix small themes and group into chunks
-                    small_theme_df = small_theme_df.sample(frac=1, random_state=42).reset_index(drop=True)
-                    for i in range(0, len(small_theme_df), max_presentations):
-                        theme_groups.append(small_theme_df.iloc[i:i+max_presentations])
+                        # Step 3: Mix small themes and group into chunks
+                        small_theme_df = small_theme_df.sample(frac=1, random_state=42).reset_index(drop=True)
+                        for i in range(0, len(small_theme_df), max_presentations):
+                            theme_groups.append(small_theme_df.iloc[i:i+max_presentations])
 
-                    # Step 4: Schedule sessions
-                    for presentation_group in theme_groups:
-                        required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
-                        section_end = datetime.combine(
-                            datetime.today() + timedelta(days=section_day[section_idx]), 
-                            sections[section_idx]['end']
-                        )
-
-                        if required_time > section_end:
-                            section_day[section_idx] += 1
-                            current_time[section_idx] = datetime.combine(
-                                datetime.today() + timedelta(days=section_day[section_idx]),
-                                sections[section_idx]['start']
-                            )
+                        # Step 4: Schedule sessions
+                        for presentation_group in theme_groups:
                             required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
+                            section_end = datetime.combine(
+                                datetime.today() + timedelta(days=section_day[section_idx]), 
+                                sections[section_idx]['end']
+                            )
 
-                        time_cursor = current_time[section_idx]
-                        for idx in presentation_group.index:
-                            df.at[idx, 'Session ID'] = session_id
-                            df.at[idx, 'Time Slot'] = time_cursor.strftime("%I:%M %p")
-                            df.at[idx, 'Section'] = sections[section_idx]['name']
-                            time_cursor += timedelta(minutes=slot_duration)
+                            if required_time > section_end:
+                                section_day[section_idx] += 1
+                                current_time[section_idx] = datetime.combine(
+                                    datetime.today() + timedelta(days=section_day[section_idx]),
+                                    sections[section_idx]['start']
+                                )
+                                required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
 
-                        current_time[section_idx] = time_cursor
-                        session_id += 1
+                            time_cursor = current_time[section_idx]
+                            for idx in presentation_group.index:
+                                df.at[idx, 'Session ID'] = session_id
+                                df.at[idx, 'Time Slot'] = time_cursor.strftime("%I:%M %p")
+                                df.at[idx, 'Section'] = sections[section_idx]['name']
+                                time_cursor += timedelta(minutes=slot_duration)
+
+                            current_time[section_idx] = time_cursor
+                            session_id += 1
 
                     final_df = df[['Section', 'Session ID', 'Time Slot', 'Theme', 'Title', 'Presenter(s)', 'Faculty Mentor']]
                     st.write("**Oral Schedule Preview:**")
