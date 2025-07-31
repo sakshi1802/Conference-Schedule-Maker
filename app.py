@@ -404,13 +404,25 @@ with col2:
                             theme_groups.append(group_df)
 
                         # Step 3: Mix and merge small themes while respecting max_presentations per session
-                        small_theme_df = small_theme_df.sample(frac=1, random_state=42).reset_index(drop=True)  # shuffle to mix
-                        for i in range(0, len(small_theme_df), max_presentations):
-                            chunk = small_theme_df.iloc[i:i+max_presentations]
-                            theme_groups.append(chunk)
+                        for section_idx, section_df in enumerate(section_dfs):
+                            theme_counts = section_df['Theme'].value_counts()
+                            large_themes = theme_counts[theme_counts >= max_presentations].index.tolist()
+                            small_themes = theme_counts[theme_counts < max_presentations].index.tolist()
 
+                            large_theme_df = section_df[section_df['Theme'].isin(large_themes)].copy()
+                            small_theme_df = section_df[section_df['Theme'].isin(small_themes)].copy()
 
-                        for presentation_group in theme_groups:
+                            theme_groups = []
+                            for _, group_df in large_theme_df.groupby('Theme'):
+                                for i in range(0, len(group_df), max_presentations):
+                                    theme_groups.append(group_df.iloc[i:i+max_presentations])
+
+                            small_theme_df = small_theme_df.sample(frac=1, random_state=42).reset_index(drop=True)
+                            for i in range(0, len(small_theme_df), max_presentations):
+                                theme_groups.append(small_theme_df.iloc[i:i+max_presentations])
+
+                            # ✅ Now correctly process each group
+                            for presentation_group in theme_groups:
                                 required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
                                 section_end = datetime.combine(
                                     datetime.today() + timedelta(days=section_day[section_idx]), 
@@ -434,7 +446,7 @@ with col2:
 
                                 current_time[section_idx] = time_cursor
                                 session_id += 1
-
+                            
                     final_df = df[['Section', 'Session ID', 'Time Slot', 'Theme', 'Title', 'Presenter(s)', 'Faculty Mentor']]
                     st.write("**Oral Schedule Preview:**")
                     st.dataframe(final_df.head(20))
