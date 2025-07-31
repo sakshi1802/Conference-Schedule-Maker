@@ -389,11 +389,28 @@ with col2:
                     section_day = [0] * num_sections
 
                     for section_idx, section_df in enumerate(section_dfs):
-                        theme_groups = section_df.groupby('Theme')
+                        # Step 1: Re-categorize themes based on presentation count threshold
+                        theme_counts = section_df['Theme'].value_counts()
+                        large_themes = theme_counts[theme_counts >= max_presentations].index.tolist()
+                        small_themes = theme_counts[theme_counts < max_presentations].index.tolist()
 
-                        for theme, theme_df in theme_groups:
-                            for i in range(0, len(theme_df), max_presentations):
-                                presentation_group = theme_df.iloc[i:i+max_presentations]
+                        # Separate into two dataframes
+                        large_theme_df = section_df[section_df['Theme'].isin(large_themes)].copy()
+                        small_theme_df = section_df[section_df['Theme'].isin(small_themes)].copy()
+
+                        # Step 2: Group large themes individually
+                        theme_groups = []
+                        for theme, group_df in large_theme_df.groupby('Theme'):
+                            theme_groups.append(group_df)
+
+                        # Step 3: Mix and merge small themes while respecting max_presentations per session
+                        small_theme_df = small_theme_df.sample(frac=1, random_state=42).reset_index(drop=True)  # shuffle to mix
+                        for i in range(0, len(small_theme_df), max_presentations):
+                            chunk = small_theme_df.iloc[i:i+max_presentations]
+                            theme_groups.append(chunk)
+
+
+                        for presentation_group in theme_groups:
                                 required_time = current_time[section_idx] + timedelta(minutes=len(presentation_group)*slot_duration)
                                 section_end = datetime.combine(
                                     datetime.today() + timedelta(days=section_day[section_idx]), 
