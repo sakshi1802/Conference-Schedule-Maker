@@ -32,6 +32,12 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
 ### Poster Sessions
 ![Poster Sessions](screenshots/Poster%20Sessions.png)
 
+### Results (CSV Files)
+<p align="center">
+  <img src="screenshots/Oral%20Session%20CSV.png" width="45%" />
+  <img src="screenshots/Poster%20Sessions%20CSV.png" width="45%" />
+</p>
+
 
 ## Requirements
 - Python 3.7 or higher
