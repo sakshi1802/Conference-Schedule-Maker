@@ -18,8 +18,7 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
   
 - **Downloadable Schedules**: After generating the schedule, users can download it in CSV format.
 
-### Screenshots
-
+## Screenshots
 ### Homepage
 ![Homepage](screenshots/Homepage.png)
 
