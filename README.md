@@ -18,6 +18,21 @@ The **Conference Schedule Maker** is a web application developed using Streamlit
   
 - **Downloadable Schedules**: After generating the schedule, users can download it in CSV format.
 
+### Screenshots
+
+### Homepage
+![Homepage](screenshots/Homepage.png)
+
+### Oral Sessions
+<p align="center">
+  <img src="screenshots/Oral%20Session%201.png" width="45%" />
+  <img src="screenshots/Oral%20Session%202.png" width="45%" />
+</p>
+
+### Poster Sessions
+![Poster Sessions](screenshots/Poster%20Sessions.png)
+
+
 ## Requirements
 - Python 3.7 or higher
 - Required Libraries:
